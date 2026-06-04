@@ -1260,9 +1260,17 @@
     background: rgba(11,63,89,0.96); backdrop-filter: blur(20px);
     border-top: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 -8px 40px rgba(0,0,0,0.22);
-    transform: translateY(0); transition: transform 0.45s cubic-bezier(.16,1,.3,1);
+    /* Hidden by default — slides in only when hero is out of view */
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(.16,1,.3,1), opacity 0.45s ease;
+    pointer-events: none;
   }
-  .sticky-mobile-cta.hidden { transform: translateY(100%); }
+  .sticky-mobile-cta.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
   .sticky-mobile-cta a {
     flex: 1; background: var(--green-1); color: var(--blue-dark);
     font-family: var(--font-display); font-weight: 800; font-size: .9rem;
@@ -2488,18 +2496,43 @@
 
   /* ─── STICKY MOBILE CTA ─── */
   (function() {
-    const cta = document.getElementById('stickyMobileCta');
-    if (!cta) return;
-    const hero = document.querySelector('.hero');
+    const cta      = document.getElementById('stickyMobileCta');
+    const hero     = document.querySelector('.hero');
     const finalCta = document.querySelector('.final-cta');
-    window.addEventListener('scroll', () => {
-      if (!hero || !finalCta) return;
-      const heroBottom = hero.getBoundingClientRect().bottom;
-      const finalTop = finalCta.getBoundingClientRect().top;
-      const inHero = heroBottom > 0;
-      const pastFinal = finalTop < window.innerHeight * 0.6;
-      cta.classList.toggle('hidden', inHero || pastFinal);
-    }, { passive: true });
+    if (!cta || !hero) return;
+
+    /*
+     * Two independent boolean flags, updated by their own observers.
+     * The CTA is visible only when BOTH conditions are true simultaneously.
+     */
+    let heroGone     = false;   // true once hero has fully left the viewport
+    let finalHidden  = true;    // true while final CTA is not yet visible
+
+    function update() {
+      const shouldShow = heroGone && finalHidden;
+      cta.classList.toggle('visible', shouldShow);
+    }
+
+    /* ── Observer 1: hero bottom sentinel ─────────────────────────────── */
+    /* Fires as soon as the last pixel of the hero scrolls off-screen.     */
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText = 'position:absolute;bottom:0;left:0;width:1px;height:1px;pointer-events:none;';
+    hero.appendChild(sentinel);
+
+    new IntersectionObserver(([entry]) => {
+      heroGone = !entry.isIntersecting;
+      update();
+    }, { threshold: 0 }).observe(sentinel);
+
+    /* ── Observer 2: final CTA section ────────────────────────────────── */
+    /* Hides the sticky CTA as soon as any part of the final CTA enters    */
+    /* the viewport; restores it when the final CTA scrolls back out.      */
+    if (finalCta) {
+      new IntersectionObserver(([entry]) => {
+        finalHidden = !entry.isIntersecting;
+        update();
+      }, { threshold: 0 }).observe(finalCta);
+    }
   })();
 
   /* ─── LANGUAGE SWITCH ─── */
