@@ -905,6 +905,85 @@
     [dir="rtl"] .ba-block        { order:  0; }
   }
 
+  /* By default (desktop), the inside-card badge is hidden.
+     It's only shown on mobile, where it visually anchors to its card. */
+  .ba-tag--inside { display: none; }
+
+  /* ─── BA SECTION — Mobile hierarchy & spacing (both languages) ───
+   *
+   * The second badge must visually BELONG to the second card, not float
+   * between cards. To achieve this without breaking desktop, each .ba-card
+   * gets a duplicate .ba-tag--inside as its first child:
+   *
+   *   - On desktop: .ba-tag--inside is display:none → original outside
+   *     .ba-tag stays in .ba-block above the card (existing layout).
+   *
+   *   - On mobile:  the OUTSIDE .ba-tag (direct child of .ba-block) is
+   *     hidden, and .ba-tag--inside becomes the card's header — first
+   *     thing the user sees inside the card, then image, then content.
+   *     The badge is now structurally and visually part of the card.
+   */
+  @media (max-width: 767px) {
+    /* Hide the outside-block badge — the inside-card one takes over */
+    .ba-block > .ba-tag { display: none; }
+
+    /* Show the inside-card badge as the card's header */
+    .ba-tag--inside {
+      display: inline-flex;
+      align-self: center;
+      margin: 18px auto 12px;     /* breathing room: from card top + before image */
+    }
+
+    /* Restore the natural block layout: no centering needed since the
+       badge is now inside the card */
+    .ba-block { align-items: stretch; gap: 0; }
+    .ba-card  { width: 100%; }
+
+    /* ── Real vertical separation between the two card containers ──
+       Apply margin-top to the visually-SECOND block (.ba-block--after).
+       On mobile, .ba-wrap is a plain block container (not flex/grid until
+       ≥768px), so the [dir="rtl"] .ba-block--after { order: -1 } rule
+       has no effect at mobile width — blocks render in source order in
+       BOTH languages. The same margin rule therefore applies to both. */
+    .ba-block--after { margin-top: 56px !important; }
+
+    /* ── Stronger card boundaries on mobile ──
+       Desktop uses subtle 1px / 1.5px borders.
+       Mobile needs more visible boundaries so users instantly see
+       these are two separate comparison cards. */
+    .ba-card--before {
+      border-width: 2px;
+      border-color: rgba(150,168,190,0.55);
+      box-shadow:
+        0 2px 6px rgba(15,31,61,0.06),
+        0 8px 24px rgba(15,31,61,0.10);
+    }
+    /* Winner card — slightly stronger prominence via deeper shadow + brand-blue border */
+    .ba-card--after {
+      border-width: 2px;
+      border-color: rgba(0,148,217,0.32);
+      box-shadow:
+        0 0 0 1px rgba(198,228,75,0.22),     /* outer lime hairline kept */
+        0 4px 10px rgba(0,148,217,0.10),
+        0 14px 36px rgba(0,148,217,0.20);    /* deeper blue lift — distinguishes it as the winner */
+    }
+
+    /* ── Match image frame weight between the two cards on mobile ──
+       The "before" image has a more visible frame thanks to its neutral
+       grey-blue border + dark shadow.  The "after" image, with its
+       brand-blue tint at lower opacity, can read as visually weaker
+       on small screens.  Bump the after-image border + shadow so it
+       matches the perceptual weight of the before-image frame while
+       keeping the brand-blue identity. */
+    .ba-card--after .ba-img-wrap {
+      border-color: rgba(0,148,217,0.32);    /* up from 0.20 — matches the before-image visibility */
+      box-shadow:
+        0 1px 2px rgba(0,148,217,0.10),
+        0 6px 20px rgba(0,148,217,0.24),     /* up from 22px/0.16 — matches before's 20px/0.12 weight */
+        0 0 0 1px rgba(255,255,255,0.6) inset;
+    }
+  }
+
   /* ─── HOW IT WORKS ─── */
   .how {
     background: linear-gradient(180deg, #eaf2fb 0%, #e4eef8 45%, #eaf3fb 100%);
@@ -2240,6 +2319,9 @@
              data-fr=" Avant CoinCarriere"
              data-ar="قبل CoinCarriere">⚠ Avant CoinCarriere</div>
         <div class="ba-card ba-card--before">
+          <div class="ba-tag ba-tag--before ba-tag--inside"
+               data-fr=" Avant CoinCarriere"
+               data-ar="قبل CoinCarriere" aria-hidden="true">⚠ Avant CoinCarriere</div>
           <div class="ba-img-wrap">
             <img src="images/before.jpg" alt="Avant CoinCarriere">
           </div>
@@ -2262,6 +2344,9 @@
              data-fr="✦ Avec CoinCarriere"
              data-ar="✦ مع CoinCarriere — الفرق واضح">✦ Avec CoinCarriere</div>
         <div class="ba-card ba-card--after">
+          <div class="ba-tag ba-tag--after ba-tag--inside"
+               data-fr="✦ Avec CoinCarriere"
+               data-ar="✦ مع CoinCarriere — الفرق واضح" aria-hidden="true">✦ Avec CoinCarriere</div>
           <div class="ba-img-wrap">
             <img src="images/after.jpg" alt="Avec CoinCarriere">
           </div>
@@ -2633,8 +2718,8 @@
          data-ar="🚀 ابدأوا التوظيف اليوم">🚀 Commencez dès aujourd'hui</div>
     <h2 data-fr="Votre prochain collaborateur est<br><em>peut-être déjà sur CoinCarriere</em>"
         data-ar="مستشاركم العقاري القادم<br><em>موجود بالفعل على CoinCarriere</em>">Votre prochain collaborateur est<br><em>peut-être déjà sur CoinCarriere</em></h2>
-    <p data-fr="Rejoignez les agences immobilières qui recrutent plus vite et mieux.<br>Gratuit pour commencer, sans engagement."
-       data-ar="انضموا إلى الوكالات العقارية المغربية التي تُوظّف بشكل أسرع وأذكى.<br>مجاني للبدء، بلا أي التزام مسبق.">Rejoignez les agences immobilières qui recrutent plus vite et mieux.<br>Gratuit pour commencer, sans engagement.</p>
+    <p data-fr="Rejoignez les agences immobilières qui recrutent plus vite et mieux."
+       data-ar="انضموا إلى الوكالات العقارية المغربية التي تُوظّف بشكل أسرع وأذكى.">Rejoignez les agences immobilières qui recrutent plus vite et mieux.</p>
     <div class="final-cta-btns">
       <a href="https://coincarriere.com/register?type=company" target="_blank" class="btn-cta-primary"
          data-fr="Publier votre annonce maintenant →"
