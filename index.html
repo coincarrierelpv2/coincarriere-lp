@@ -631,26 +631,74 @@
   .ba-inner { max-width: 1080px; margin: 0 auto; position: relative; }
   .ba-section .section-header { margin-bottom: 24px; }
 
-  /* ── VS badge (kept for tablet+) ── */
+  /* ── Transition circle — replaces the old "VS" badge ──
+   * Visualises the move from traditional recruitment → CoinCarriere.
+   * Blue gradient circle with a white directional arrow inside.
+   *   LTR (French): arrow points RIGHT (toward CoinCarriere card on the right)
+   *   RTL (Arabic): arrow points LEFT (toward CoinCarriere card on the left)
+   * Mobile: visible between the two stacked cards, centered in the gap.
+   * Tablet/desktop: visible between the side-by-side cards, dead-centre. */
   .ba-vs {
-    display: none;
-    position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%);
-    width: 52px; height: 52px; border-radius: 50%;
-    background: linear-gradient(135deg, #0094d9 0%, #16498c 100%);
-    color: #fff; font-size: .74rem; font-weight: 900; letter-spacing: 0.8px;
+    display: flex;
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #0094D9 0%, #0077C8 100%);
     align-items: center; justify-content: center; z-index: 10;
     box-shadow:
       0 0 0 4px #fff,
-      0 0 0 6px rgba(0,148,217,0.22),
-      0 8px 24px rgba(0,148,217,0.35);
+      0 0 0 6px rgba(0,148,217,0.20),
+      0 10px 28px rgba(0,148,217,0.35);
+    transition: transform 0.3s cubic-bezier(.16,1,.3,1), box-shadow 0.3s ease;
     animation: vsPulse 3s ease-in-out infinite;
+    /* Hide the legacy "VS" text content — SVG arrow renders via ::before below */
+    font-size: 0; color: transparent;
   }
+  /* White directional arrow inside the circle (drawn as an SVG background-image
+     so we don't need to modify the HTML to add an <svg> child). */
+  .ba-vs::before {
+    content: '';
+    width: 26px; height: 26px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><line x1='5' y1='12' x2='19' y2='12'/><polyline points='13 6 19 12 13 18'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+  /* RTL: flip the arrow horizontally so it points LEFT (toward CoinCarriere) */
+  [dir="rtl"] .ba-vs::before { transform: scaleX(-1); }
+  /* Mobile (both languages): cards stack vertically (traditional on top,
+     CoinCarriere below), so the arrow must point DOWN to guide the eye
+     from one card to the next. Overrides both the LTR base right-arrow
+     and the RTL scaleX(-1) left-arrow with a 90° clockwise rotation.
+     Specificity is bumped via [dir] to win over the base RTL rule. */
+  @media (max-width: 767px) {
+    [dir="ltr"] .ba-vs::before,
+    [dir="rtl"] .ba-vs::before { transform: rotate(90deg); }
+  }
+  /* Hover (desktop) — subtle scale-up */
+  .ba-vs:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+    box-shadow:
+      0 0 0 4px #fff,
+      0 0 0 7px rgba(0,148,217,0.28),
+      0 14px 36px rgba(0,148,217,0.42);
+  }
+  /* Mobile: parent .ba-wrap needs to be a positioning context so the
+     absolute .ba-vs sits centered in the wrap, between the two stacked cards */
+  .ba-wrap { position: relative; }
+
   @keyframes vsPulse {
     0%, 100% {
-      box-shadow: 0 0 0 4px #fff, 0 0 0 6px rgba(0,148,217,0.22), 0 8px 24px rgba(0,148,217,0.35);
+      box-shadow:
+        0 0 0 4px #fff,
+        0 0 0 6px rgba(0,148,217,0.20),
+        0 10px 28px rgba(0,148,217,0.35);
     }
     50% {
-      box-shadow: 0 0 0 4px #fff, 0 0 0 8px rgba(0,148,217,0.15), 0 10px 32px rgba(0,148,217,0.45);
+      box-shadow:
+        0 0 0 4px #fff,
+        0 0 0 8px rgba(0,148,217,0.14),
+        0 12px 36px rgba(0,148,217,0.45);
     }
   }
 
@@ -706,30 +754,26 @@
     filter: saturate(0.85) brightness(0.99);
     border-color: rgba(180,195,215,0.9);
   }
-  /* Winner card: subtle lime-green top accent + refined blue glow */
+  /* Winner card — full 2px green border on all sides + subtle green glow
+     marks this as the recommended solution. Replaces the previous
+     blue border + lime top-bar accent. */
   .ba-card--after {
-    border: 1.5px solid rgba(0,148,217,0.20);
+    border: 2px solid rgba(198,228,75,0.85);    /* full lime-green outline */
     box-shadow:
-      0 0 0 1px rgba(198,228,75,0.18),   /* outer lime hairline */
-      0 6px 24px rgba(0,148,217,0.13),
-      0 2px 6px rgba(0,148,217,0.07);
+      0 0 0 1px rgba(220,254,17,0.10),          /* faint outer green halo */
+      0 8px 28px rgba(198,228,75,0.20),         /* soft green glow */
+      0 2px 8px rgba(0,0,0,0.04);               /* base depth */
     position: relative;
   }
-  /* lime-green top bar — winner accent */
-  .ba-card--after::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #C6E44B 0%, #a8d420 100%);
-    border-radius: 22px 22px 0 0;
-    z-index: 2;
-  }
+  /* Top-bar accent removed — full border now provides the recommendation cue */
+  .ba-card--after::before { display: none; }
   .ba-card--after:hover {
     transform: translateY(-6px);
     box-shadow:
-      0 0 0 1px rgba(198,228,75,0.28),
-      0 16px 44px rgba(0,148,217,0.18),
-      0 4px 14px rgba(0,148,217,0.10);
-    border-color: rgba(0,148,217,0.32);
+      0 0 0 1px rgba(220,254,17,0.16),
+      0 14px 40px rgba(198,228,75,0.28),
+      0 4px 14px rgba(0,0,0,0.05);
+    border-color: rgba(198,228,75,1);
   }
 
   /* ── Image — hero of the card, ~70% of total height ── */
@@ -958,14 +1002,16 @@
         0 2px 6px rgba(15,31,61,0.06),
         0 8px 24px rgba(15,31,61,0.10);
     }
-    /* Winner card — slightly stronger prominence via deeper shadow + brand-blue border */
+    /* Winner card on mobile — full 2px green border + subtle green glow
+       (matches the new desktop treatment; stronger shadow on mobile for
+       better contrast on small screens) */
     .ba-card--after {
       border-width: 2px;
-      border-color: rgba(0,148,217,0.32);
+      border-color: rgba(198,228,75,0.85);
       box-shadow:
-        0 0 0 1px rgba(198,228,75,0.22),     /* outer lime hairline kept */
-        0 4px 10px rgba(0,148,217,0.10),
-        0 14px 36px rgba(0,148,217,0.20);    /* deeper blue lift — distinguishes it as the winner */
+        0 0 0 1px rgba(220,254,17,0.12),
+        0 4px 12px rgba(198,228,75,0.18),
+        0 14px 36px rgba(198,228,75,0.24);
     }
 
     /* ── Match image frame weight between the two cards on mobile ──
@@ -1705,6 +1751,53 @@
   [dir="rtl"] .btn-cta-primary:hover .btn-arrow {
     transform: translateY(-1px) translateX(-2px); /* RTL: nudge leftward */
   }
+
+  /* ─── Arabic-only CTA visual enhancements ───
+   * Larger inner text, larger arrow, wider text-arrow gap, and the same
+   * floating glow animation on the hero CTA that the final CTA already has.
+   * Button outer dimensions (padding, border-radius, colors, font-family)
+   * are NOT touched — only the inner content gets prominence. */
+  [dir="rtl"] .btn-primary .btn-text,
+  [dir="rtl"] .btn-cta-primary .btn-text,
+  [dir="rtl"] .sticky-mobile-cta a .btn-text {
+    font-size: 1.12em;        /* ~12% larger inner text (within 10–15% range) */
+    font-weight: 900;         /* heavier weight — strong visual prominence */
+    letter-spacing: -0.2px;   /* tighten slightly so wider chars don't crowd */
+    line-height: 1;           /* prevents the larger text from inflating the line box */
+  }
+  [dir="rtl"] .btn-primary .btn-arrow,
+  [dir="rtl"] .btn-cta-primary .btn-arrow,
+  [dir="rtl"] .sticky-mobile-cta a .btn-arrow {
+    font-size: 1.55em;        /* +29% larger than the previous 1.2em (within 30–40% range) */
+    font-weight: 800;
+  }
+  /* Wider gap between the bolder Arabic text and the larger arrow */
+  [dir="rtl"] .btn-primary,
+  [dir="rtl"] .btn-cta-primary,
+  [dir="rtl"] .sticky-mobile-cta a {
+    gap: 14px;
+  }
+  /* Hero CTA — Arabic — reuse the exact same ctaGlow animation as the final CTA */
+  [dir="rtl"] .btn-primary {
+    animation: ctaGlow 3s ease-in-out infinite;
+  }
+  /* Pause animation on hover (same behaviour as the final CTA) */
+  [dir="rtl"] .btn-primary:hover {
+    animation: none;
+  }
+  /* Arabic mobile only: explicit font-weight 800 on the CTA text.
+     The base Arabic rule above declares font-weight: 900, but Montserrat
+     is only loaded with weights 400–800 (see <link> in <head>). At 900 the
+     browser falls back to faux-bold or to weight 800, sometimes with
+     inconsistent rendering across devices. Pinning to 800 guarantees the
+     real Montserrat 800 file renders crisply on mobile screens. */
+  @media (max-width: 767px) {
+    [dir="rtl"] .btn-primary .btn-text,
+    [dir="rtl"] .btn-cta-primary .btn-text,
+    [dir="rtl"] .sticky-mobile-cta a .btn-text {
+      font-weight: 800;
+    }
+  }
   .final-cta-trust {
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     margin-top: 20px; padding: 0 4px; flex-wrap: wrap;
@@ -2056,7 +2149,7 @@
     .problem-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .problem-stat { padding: 0; }
     .problem-stat-inner { padding: 22px 28px 22px 32px; }
-    .ba-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; position: relative; }
+    .ba-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; position: relative; }
     .ba-vs { display: flex; }
     .ba-img-wrap { aspect-ratio: 3/2; }
     .ba-section .section-header { margin-bottom: 20px; }
@@ -2137,7 +2230,7 @@
     .problem-card { padding: 36px 32px 34px; }
     .ba-section { padding: 64px 60px 72px; }
     .ba-section .section-header { margin-bottom: 28px; }
-    .ba-wrap { grid-template-columns: 1fr 1fr; gap: 28px; }
+    .ba-wrap { grid-template-columns: 1fr 1fr; gap: 100px; }
     .ba-img-wrap { aspect-ratio: 4/3; }
     .ba-card--before { opacity: 0.92; filter: saturate(0.68) brightness(0.965); transform: scale(0.986); }
     .ba-card--before:hover { opacity: 1; filter: saturate(0.88) brightness(0.995); transform: scale(1.006) translateY(-4px); }
@@ -2360,7 +2453,7 @@
     <button id="btnAR" class="active" onclick="setLang('ar')">AR</button>
   </div>
   <a href="https://coincarriere.com/register?type=company" target="_blank" class="nav-cta"
-     data-fr="S'inscrire" data-ar="سجّل الآن">S'inscrire</a>
+     data-fr="S'inscrire" data-ar="وظّف الان">S'inscrire</a>
 </nav>
 
 <!-- ─── 1. HERO ─── -->
@@ -2395,11 +2488,9 @@
       </p>
       <div class="hero-btns">
         <a href="https://coincarriere.com/register?type=company" target="_blank" class="btn-primary"
-           data-fr="Publier votre annonce maintenant <span class='btn-arrow'>→</span>"
-           data-ar="انشر عرضك الوظيفي الآن <span class='btn-arrow'>←</span>">Publier votre annonce maintenant <span class="btn-arrow">→</span></a>
+           data-fr="<span class='btn-text'>Publier votre annonce maintenant</span> <span class='btn-arrow'>→</span>"
+         data-ar="<span class='btn-text'>انشر اعلانك مجانا</span> <span class='btn-arrow'>←</span>"><span class="btn-text">Publier votre annonce maintenant</span> <span class="btn-arrow">→</span></a>
       </div>
-    </div>
-  </div>
 </section>
 
 <!-- ─── 2. TRUST LOGOS ─── -->
@@ -2583,7 +2674,7 @@
           data-ar="ما الذي يميز CoinCarriere؟">La différence CoinCarriere</h2>
     </div>
     <div class="ba-wrap fade-in">
-      <div class="ba-vs">VS</div>
+      <div class="ba-vs" aria-hidden="true"></div>
 
       <div class="ba-block">
         <div class="ba-tag ba-tag--before"
@@ -2728,14 +2819,14 @@
       <div class="stat-value" data-target="458" data-prefix="+">+458</div>
       <div class="stat-label"
            data-fr="Entreprises actives sur la plateforme"
-           data-ar="وكالة ومؤسسة عقارية">Entreprises actives sur la plateforme</div>
+           data-ar="شركة نشيطة على المنصة">Entreprises actives sur la plateforme</div>
     </div>
 
     <div class="stat-item fade-in">
       <div class="stat-value" data-target="4944" data-prefix="+">+4 944</div>
       <div class="stat-label"
            data-fr="Offres publiées"
-           data-ar="إعلان توظيف عقاري منشور">Offres publiées</div>
+           data-ar="إعلان توظيف منشور">Offres publiées</div>
     </div>
 
     <div class="stat-item fade-in">
@@ -2980,17 +3071,6 @@
         </div>
       </div>
 
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false">
-          <span data-fr="Est-ce réservé à l'immobilier ?" data-ar="هل CoinCarriere مخصّص حصرياً للقطاع العقاري؟">Est-ce réservé à l'immobilier ?</span>
-          <span class="faq-chevron">▾</span>
-        </button>
-        <div class="faq-answer">
-          <span data-fr="CoinCarriere est spécialisé dans le recrutement pour le secteur immobilier au Maroc. Cette spécialisation nous permet de vous proposer des candidats qui connaissent réellement votre métier."
-                data-ar="نعم، CoinCarriere متخصّص حصرياً في التوظيف العقاري بالمغرب. هذا التخصص الدقيق يمكّننا من تقديم مرشّحين يعرفون متطلبات السوق العقاري المغربي فعلاً.">CoinCarriere est spécialisé dans le recrutement pour le secteur immobilier au Maroc. Cette spécialisation nous permet de vous proposer des candidats qui connaissent réellement votre métier.</span>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>
@@ -3008,8 +3088,8 @@
        data-ar="انشر إعلانك اليوم واستقبل أولى طلبات التوظيف خلال وقت قصير.">Rejoignez les agences immobilières qui recrutent plus vite et mieux.</p>
     <div class="final-cta-btns">
       <a href="https://coincarriere.com/register?type=company" target="_blank" class="btn-cta-primary"
-         data-fr="Publier votre annonce maintenant <span class='btn-arrow'>→</span>"
-         data-ar="انشر إعلانك الآن <span class='btn-arrow'>←</span>">Publier votre annonce maintenant <span class="btn-arrow">→</span></a>
+         data-fr="<span class='btn-text'>Publier votre annonce maintenant</span> <span class='btn-arrow'>→</span>"
+         data-ar="<span class='btn-text'>انشر إعلانك مجانا</span> <span class='btn-arrow'>←</span>"><span class="btn-text">Publier votre annonce maintenant</span> <span class="btn-arrow">→</span></a>
     </div>
     <div class="final-cta-trust">
       <div class="trust-item"
@@ -3025,8 +3105,8 @@
 <!-- ─── 11. STICKY MOBILE CTA ─── -->
 <div class="sticky-mobile-cta" id="stickyMobileCta">
   <a href="https://coincarriere.com/register?type=company" target="_blank"
-     data-fr="Publier mon offre →"
-     data-ar="انشر إعلاني الآن ←">Publier mon offre →</a>
+     data-fr="<span class='btn-text'>Publier mon offre</span> <span class='btn-arrow'>→</span>"
+     data-ar="<span class='btn-text'>انشر إعلاني الآن</span> <span class='btn-arrow'>←</span>"><span class="btn-text">Publier mon offre</span> <span class="btn-arrow">→</span></a>
 </div>
 
 <!-- ─── FOOTER ─── -->
