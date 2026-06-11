@@ -92,7 +92,7 @@
   .nav-cta {
     background: var(--green-1);
     color: var(--blue-dark); font-family: var(--font-display);
-    font-weight: 700; font-size: .8rem;
+    font-weight: 800; font-size: .8rem;
     padding: 8px 16px; border-radius: 7px;
     border: none; cursor: pointer; text-decoration: none;
     transition: background .2s, transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s;
@@ -251,11 +251,12 @@
   .hero-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 0; }
   .btn-primary {
     background: var(--green-1); color: var(--blue-dark); font-family: var(--font-display);
-    font-weight: 800; font-size: .98rem;
-    padding: 13px 20px; border-radius: 8px;
+    font-weight: 800; font-size: 1.03rem;
+    padding: 13px 21px; border-radius: 8px;
     border: none; cursor: pointer; text-decoration: none;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     width: 100%; transition: all 0.3s cubic-bezier(.16,1,.3,1);
+    animation: ctaFloat 3.5s ease-in-out infinite;
     position: relative; overflow: hidden;
   }
   .btn-primary::before {
@@ -268,6 +269,7 @@
     transform: translateY(-3px);
     box-shadow: 0 12px 36px rgba(220,254,17,0.5), 0 4px 12px rgba(220,254,17,0.3);
     background: var(--green-2);
+    animation: none;  /* pause float so the hover lift reads cleanly */
   }
   .btn-secondary {
     background: rgba(255,255,255,0.1); color: #fff; font-family: var(--font-display);
@@ -1705,12 +1707,12 @@
   .final-cta-btns { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
   .btn-cta-primary {
     background: var(--green-1); color: var(--blue-dark); font-family: var(--font-display);
-    font-weight: 800; font-size: 1rem; padding: 14px 20px; border-radius: var(--radius-sm);
+    font-weight: 800; font-size: 1.05rem; padding: 14px 16px; border-radius: var(--radius-sm);
     border: none; cursor: pointer; text-decoration: none;
     display: inline-flex; align-items: center; justify-content: center; gap: 10px;
     width: 100%; box-shadow: 0 12px 36px rgba(220,254,17,0.4);
     transition: all 0.35s cubic-bezier(.16,1,.3,1);
-    animation: ctaGlow 3s ease-in-out infinite;
+    animation: ctaGlow 3s ease-in-out infinite, ctaFloat 3.5s ease-in-out infinite;
     position: relative; overflow: hidden;
   }
   .btn-cta-primary::before {
@@ -1722,6 +1724,15 @@
   @keyframes ctaGlow {
     0%,100% { box-shadow: 0 12px 36px rgba(220,254,17,0.4); }
     50% { box-shadow: 0 16px 48px rgba(220,254,17,0.6), 0 0 60px rgba(220,254,17,0.2); }
+  }
+  /* ─── Subtle premium floating motion for all CTA buttons ───
+     Animates ONLY transform:translateY, so it composes cleanly alongside
+     the existing ctaGlow (which animates box-shadow). No scale, no rotate,
+     no bounce — a slow, gentle up/down drift of 4px. Runs as a second
+     comma-separated animation on each CTA so the glow is fully preserved. */
+  @keyframes ctaFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
   }
   .btn-cta-primary:hover {
     transform: translateY(-4px);
@@ -1777,9 +1788,10 @@
   [dir="rtl"] .sticky-mobile-cta a {
     gap: 14px;
   }
-  /* Hero CTA — Arabic — reuse the exact same ctaGlow animation as the final CTA */
+  /* Hero CTA — Arabic — reuse the exact same ctaGlow animation as the final CTA,
+     plus the shared subtle ctaFloat drift (glow + float compose cleanly). */
   [dir="rtl"] .btn-primary {
-    animation: ctaGlow 3s ease-in-out infinite;
+    animation: ctaGlow 3s ease-in-out infinite, ctaFloat 3.5s ease-in-out infinite;
   }
   /* Pause animation on hover (same behaviour as the final CTA) */
   [dir="rtl"] .btn-primary:hover {
@@ -1798,6 +1810,135 @@
       font-weight: 800;
     }
   }
+  /* ════════════════════════════════════════════════════════════════
+     ARABIC-ONLY CTA REFINEMENTS  (scoped strictly to [dir="rtl"])
+     French version is never affected. Only CTA hierarchy/balance.
+     ════════════════════════════════════════════════════════════════ */
+
+  /* ─── ARABIC MOBILE (≤767px) ─── */
+  @media (max-width: 767px) {
+
+    /* HERO CTA — slightly wider via increased horizontal padding,
+       height preserved; larger bolder text; perfectly centered & nudged down */
+    [dir="rtl"] .btn-primary {
+      padding: 13px 38px;        /* slightly wider (was 13px 30px) — height kept */
+    }
+    [dir="rtl"] .btn-primary .btn-text {
+      font-size: 1.36em;         /* slightly larger CTA text (was 1.3em) */
+      font-weight: 800;
+    }
+    /* Move CTA slightly downward — small top margin tightens the void below */
+    [dir="rtl"] .hero-btns {
+      margin-top: 22px;          /* nudged a touch lower (was 14px) */
+    }
+    /* ─── TRUE HORIZONTAL CENTERING OF THE ARABIC HERO CTA ───
+       Root cause of the rightward shift: .hero is a flex row with
+       direction:rtl, so its in-flow child .hero-inner shrinks to content
+       width and is placed at the RTL main-start (the RIGHT), leaving a
+       larger empty gap on the LEFT. Centering the button inside that
+       already-offset block inherited the offset.
+
+       Fix: make the hero block-level containers span the FULL hero content
+       width so their horizontal center coincides with the hero's own center.
+       The button is then centered against the Hero container itself using
+       pure margin-left:auto / margin-right:auto — no RTL alignment rules,
+       no right offsets, no margin-right values, no flex-end. Width, height,
+       typography and vertical position are all left untouched. */
+    [dir="rtl"] .hero .hero-inner,
+    [dir="rtl"] .hero .hero-text {
+      width: 100%;               /* fill the hero content box → block is centered in .hero */
+    }
+    [dir="rtl"] .hero .hero-btns {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;      /* let the button's own auto margins do the centering */
+      width: 100%;               /* span full width so margin:auto resolves to hero center */
+      margin-left: 0;
+      margin-right: 0;
+    }
+    [dir="rtl"] .hero .hero-btns .btn-primary {
+      width: auto;               /* preserve current content-based width (unchanged) */
+      min-width: 0;
+      margin-left: auto;         /* equal space on the left  */
+      margin-right: auto;        /* equal space on the right */
+    }
+
+    /* FINAL CTA — slightly narrower from both sides, kept perfectly centered;
+       larger text; premium look & glow preserved */
+    [dir="rtl"] .btn-cta-primary {
+      width: auto;               /* shrink off full-width so both sides pull in */
+      align-self: center;        /* keep centered within the stretch container */
+      padding: 14px 24px;        /* slightly narrower from both sides (was 14px 30px) */
+    }
+    [dir="rtl"] .btn-cta-primary .btn-text {
+      font-size: 1.36em;         /* slightly larger CTA text (was 1.3em) */
+      font-weight: 800;
+    }
+
+    /* STICKY CTA — arrow removed in markup; text only, bolder & larger.
+       Colors, glow and sticky behavior untouched. */
+    [dir="rtl"] .sticky-mobile-cta a .btn-text {
+      font-size: 1.18em;         /* slightly larger */
+      font-weight: 800;          /* bold */
+    }
+    [dir="rtl"] .sticky-mobile-cta a {
+      gap: 0;                    /* no arrow gap remaining */
+    }
+  }
+
+  /* ─── FRENCH MOBILE (≤767px) ─── */
+  @media (max-width: 767px) {
+
+    /* HERO CTA ("Recruter maintenant") — slightly narrower from both
+       sides, perfectly centered; height & styling unchanged. */
+    [dir="ltr"] .hero-btns {
+      align-items: center;       /* center the shrunk button in the column */
+    }
+    [dir="ltr"] .btn-primary {
+      width: auto;               /* shrink off full-width so both sides pull in */
+      padding: 13px 28px;        /* narrower than the 100%-width default; height (13px) kept */
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* FINAL CTA ("Recruter maintenant") — slightly narrower from both
+       sides, perfectly centered; glow & styling unchanged. */
+    [dir="ltr"] .final-cta-btns {
+      align-items: center;       /* center within the stretch container */
+    }
+    [dir="ltr"] .btn-cta-primary {
+      width: auto;               /* shrink off full-width so both sides pull in */
+      align-self: center;
+      padding: 14px 28px;        /* narrower than the 100%-width default */
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  /* ─── ARABIC DESKTOP (≥1024px) ─── */
+  @media (min-width: 1024px) {
+
+    /* HERO CTA — moderately larger button + noticeably larger text.
+       Spacing & layout preserved. */
+    [dir="rtl"] .btn-primary {
+      padding: 18px 42px;        /* was 15px 34px — moderately bigger */
+    }
+    [dir="rtl"] .btn-primary .btn-text {
+      font-size: 1.3em;          /* noticeably larger (was 1.12em) */
+      font-weight: 800;
+    }
+
+    /* FINAL CTA — moderately larger button + larger text.
+       Glow effect and layout preserved. */
+    [dir="rtl"] .btn-cta-primary {
+      padding: 22px 36px;        /* was 18px 28px — moderately bigger */
+    }
+    [dir="rtl"] .btn-cta-primary .btn-text {
+      font-size: 1.28em;         /* larger (was 1.12em) */
+      font-weight: 800;
+    }
+  }
+
   .final-cta-trust {
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     margin-top: 20px; padding: 0 4px; flex-wrap: wrap;
@@ -2063,6 +2204,24 @@
       margin-bottom: 0;        /* nothing below — no residual space */
     }
 
+    /* ─── Arabic mobile hero spacing & CTA alignment ───
+       Applied ONLY to Arabic mobile (dir=rtl + max-width 767px).
+       1. Increase badge → headline breathing room
+       2. Increase headline → description breathing room
+       3. Optically center the Hero CTA by shifting it slightly left
+          (the RTL context visually biases the button right; a small
+          margin-right nudge pulls it toward true optical center) */
+    [dir="rtl"] .hero-badge {
+      margin-bottom: 18px;     /* was 12px → more breathing room before headline */
+    }
+    [dir="rtl"] .hero h1 {
+      margin-bottom: 18px;     /* was 12px → more breathing room before description */
+    }
+    /* (Former margin-right:10px "optical nudge" removed — the Hero CTA is now
+       truly centered via [dir="rtl"] .hero .hero-btns above, matching the
+       French Hero CTA exactly. A residual margin would re-introduce the
+       rightward shift this fix is meant to eliminate.) */
+
     /* ── Arabic mobile hero stability — total stillness ──
        Goal: zero perceptible movement during page load.
        Strategy:
@@ -2081,6 +2240,14 @@
     [dir="rtl"] .hero *::after {
       animation: none !important;
       transition: none !important;
+    }
+
+    /* Exception: the Hero CTA keeps its subtle floating + glow. The stillness
+       rule above exists to stop load-time entrance/ambient jitter; the CTA
+       float is a deliberate, gentle, infinite drift and must remain alive
+       here just like every other CTA across the site. */
+    [dir="rtl"] .hero .btn-primary {
+      animation: ctaGlow 3s ease-in-out infinite, ctaFloat 3.5s ease-in-out infinite !important;
     }
 
     /* Force any element that previously used a transform back to identity
@@ -2142,7 +2309,7 @@
     .hero-sub { font-size: 0.9rem; }
     .hero h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); }
     .hero-btns { flex-direction: row; gap: 12px; }
-    .btn-primary, .btn-secondary { width: auto; padding: 14px 22px; }
+    .btn-primary, .btn-secondary { width: auto; padding: 14px 23px; }
     .trust-section { padding: 50px 40px 54px; }
     .logo-marquee::before, .logo-marquee::after { width: 80px; }
     .logo-set img { height: 48px; }
@@ -2181,7 +2348,7 @@
     .final-cta h2 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); margin-bottom: 16px; }
     .final-cta p { font-size: .95rem; margin-bottom: 32px; }
     .final-cta-btns { flex-direction: row; justify-content: center; align-items: center; }
-    .btn-cta-primary { width: auto; padding: 16px 32px; font-size: 1.06rem; }
+    .btn-cta-primary { width: auto; padding: 16px 22px; font-size: 1.06rem; }
     .final-cta-trust { flex-direction: row; justify-content: center; align-items: center; gap: 20px; margin-top: 28px; }
     footer { padding: 28px 40px; }
     .footer-minimal { flex-direction: row; justify-content: space-between; text-align: left; }
@@ -2219,8 +2386,8 @@
     .hero h1 { font-size: clamp(2.6rem, 4.5vw, 4rem); letter-spacing: -1.5px; margin-bottom: 28px; }
     .hero-sub { font-size: 1.1rem; margin-bottom: 36px; }
     .hero-btns { flex-direction: row; gap: 20px; margin-bottom: 0; }
-    .btn-primary { font-size: 1.06rem; padding: 15px 32px; box-shadow: 0 20px 48px rgba(220,254,17,0.45); width: auto; }
-    .btn-primary:hover { transform: translateY(-5px); box-shadow: 0 28px 64px rgba(220,254,17,0.65); }
+    .btn-primary { font-size: 1.06rem; padding: 15px 34px; box-shadow: 0 20px 48px rgba(220,254,17,0.45); width: auto; }
+    .btn-primary:hover { transform: translateY(-5px); box-shadow: 0 28px 64px rgba(220,254,17,0.65); animation: none; }
     .btn-secondary { font-size: 1rem; padding: 15px 32px; width: auto; }
     .trust-section { padding: 70px 60px; }
     .logo-marquee::before, .logo-marquee::after { width: 120px; }
@@ -2388,7 +2555,7 @@
     .final-cta-inner { padding: 72px 64px 60px; border-radius: 32px; box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset, 0 40px 100px rgba(0,0,0,0.32), 0 0 80px rgba(0,148,217,0.08); }
     .final-cta h2 { font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -1.2px; margin-bottom: 18px; }
     .final-cta p { font-size: 1.05rem; margin-bottom: 44px; }
-    .btn-cta-primary { padding: 18px 40px; font-size: 1.14rem; width: auto; max-width: 420px; }
+    .btn-cta-primary { padding: 18px 28px; font-size: 1.14rem; width: auto; max-width: 420px; }
     .final-cta-trust { gap: 28px; margin-top: 36px; }
     footer { padding: 32px 60px; }
     .footer-minimal .nav-logo img { height: 38px; }
@@ -2453,7 +2620,7 @@
     <button id="btnAR" class="active" onclick="setLang('ar')">AR</button>
   </div>
   <a href="https://coincarriere.com/register?type=company" target="_blank" class="nav-cta"
-     data-fr="S'inscrire" data-ar="وظّف الان">S'inscrire</a>
+     data-fr="S'inscrire" data-ar="سجّل الآن">سجّل الآن</a>
 </nav>
 
 <!-- ─── 1. HERO ─── -->
@@ -2482,15 +2649,17 @@
       </h1>
       <p class="hero-sub"
          data-fr="Recevez uniquement des candidats qualifiés,<br>sans perdre de temps à trier des CV inutiles."
-         data-ar="<span class='ar-sub-desktop'>انشروا إعلانكم في دقائق واستقبلوا ملفات مرشحين مهتمين فعلاً بالقطاع العقاري، دون إضاعة الوقت في الفرز العشوائي.</span><span class='ar-sub-mobile'>انشروا إعلانكم واستقبلوا مرشحين مهتمين فعلاً بالعقار.</span>">
+         data-ar="<span class='ar-sub-desktop'>انشروا إعلانكم واستقبلوا مرشحين مهتمين فعلاً بالقطاع العقاري، دون إضاعة الوقت في الفرز العشوائي.</span><span class='ar-sub-mobile'>انشروا إعلانكم واستقبلوا مرشحين مهتمين فعلاً بالعقار.</span>">
         Recevez uniquement des candidats qualifiés,<br>
         sans perdre de temps à trier des CV inutiles.
       </p>
       <div class="hero-btns">
         <a href="https://coincarriere.com/register?type=company" target="_blank" class="btn-primary"
-           data-fr="<span class='btn-text'>Publier votre annonce maintenant</span> <span class='btn-arrow'>→</span>"
-         data-ar="<span class='btn-text'>انشر اعلانك مجانا</span> <span class='btn-arrow'>←</span>"><span class="btn-text">Publier votre annonce maintenant</span> <span class="btn-arrow">→</span></a>
+           data-fr="<span class='btn-text'>Recruter maintenant</span>"
+           data-ar="<span class='btn-text'>وظّف الآن</span>"><span class="btn-text">وظّف الآن</span></a>
       </div>
+    </div>
+  </div>
 </section>
 
 <!-- ─── 2. TRUST LOGOS ─── -->
@@ -2819,14 +2988,14 @@
       <div class="stat-value" data-target="458" data-prefix="+">+458</div>
       <div class="stat-label"
            data-fr="Entreprises actives sur la plateforme"
-           data-ar="شركة نشيطة على المنصة">Entreprises actives sur la plateforme</div>
+           data-ar="وكالة ومؤسسة عقارية">Entreprises actives sur la plateforme</div>
     </div>
 
     <div class="stat-item fade-in">
       <div class="stat-value" data-target="4944" data-prefix="+">+4 944</div>
       <div class="stat-label"
            data-fr="Offres publiées"
-           data-ar="إعلان توظيف منشور">Offres publiées</div>
+           data-ar="إعلان توظيف عقاري منشور">Offres publiées</div>
     </div>
 
     <div class="stat-item fade-in">
@@ -3088,8 +3257,8 @@
        data-ar="انشر إعلانك اليوم واستقبل أولى طلبات التوظيف خلال وقت قصير.">Rejoignez les agences immobilières qui recrutent plus vite et mieux.</p>
     <div class="final-cta-btns">
       <a href="https://coincarriere.com/register?type=company" target="_blank" class="btn-cta-primary"
-         data-fr="<span class='btn-text'>Publier votre annonce maintenant</span> <span class='btn-arrow'>→</span>"
-         data-ar="<span class='btn-text'>انشر إعلانك مجانا</span> <span class='btn-arrow'>←</span>"><span class="btn-text">Publier votre annonce maintenant</span> <span class="btn-arrow">→</span></a>
+         data-fr="<span class='btn-text'>Recruter maintenant</span>"
+         data-ar="<span class='btn-text'>وظّف الآن</span>"><span class="btn-text">وظّف الآن</span></a>
     </div>
     <div class="final-cta-trust">
       <div class="trust-item"
@@ -3106,7 +3275,7 @@
 <div class="sticky-mobile-cta" id="stickyMobileCta">
   <a href="https://coincarriere.com/register?type=company" target="_blank"
      data-fr="<span class='btn-text'>Publier mon offre</span> <span class='btn-arrow'>→</span>"
-     data-ar="<span class='btn-text'>انشر إعلاني الآن</span> <span class='btn-arrow'>←</span>"><span class="btn-text">Publier mon offre</span> <span class="btn-arrow">→</span></a>
+     data-ar="<span class='btn-text'>انشر إعلاني الآن</span>"><span class="btn-text">Publier mon offre</span> <span class="btn-arrow">→</span></a>
 </div>
 
 <!-- ─── FOOTER ─── -->
